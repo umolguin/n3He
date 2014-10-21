@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Xen" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Xen" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Xen" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="CMakeLists.txt" />
+		<Unit filename="GNUmakefile" />
+		<Unit filename="Helium3Def" />
+		<Unit filename="Test.cc" />
+		<Unit filename="XenExe.cc" />
+		<Unit filename="XenExe.in" />
+		<Unit filename="XenExe.out" />
+		<Unit filename="include/CellManager.hh" />
+		<Unit filename="include/EnergyManager.hh" />
+		<Unit filename="include/MomentumManager.hh" />
+		<Unit filename="include/RandomGEN.hh" />
+		<Unit filename="include/XenDetectorConstruction.hh" />
+		<Unit filename="include/XenEventAction.hh" />
+		<Unit filename="include/XenPrimaryGeneratorAction.hh" />
+		<Unit filename="include/XenRunAction.hh" />
+		<Unit filename="include/XenSteppingAction.hh" />
+		<Unit filename="include/XenTrackingAction" />
+		<Unit filename="include/XenTrackingAction.hh" />
+		<Unit filename="init.mac" />
+		<Unit filename="init_vis.mac" />
+		<Unit filename="run1.mac" />
+		<Unit filename="run2.mac" />
+		<Unit filename="src/CellManager.cc" />
+		<Unit filename="src/EnergyManager.cc" />
+		<Unit filename="src/MomentumManager.cc" />
+		<Unit filename="src/RandomGEN.cc" />
+		<Unit filename="src/XenDetectorConstruction.cc" />
+		<Unit filename="src/XenEventAction.cc" />
+		<Unit filename="src/XenPrimaryGeneratorAction.cc" />
+		<Unit filename="src/XenRunAction.cc" />
+		<Unit filename="src/XenSteppingAction.cc" />
+		<Unit filename="src/XenTrackingAction.cc" />
+		<Unit filename="vis.mac" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

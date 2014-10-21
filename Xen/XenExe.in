@@ -1,0 +1,5 @@
+
+# gamma 6 MeV -> Changed to neutron
+/gun/particle neutron
+#/gun/energy 300 MeV
+/run/beamOn 1000

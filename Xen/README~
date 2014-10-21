@@ -1,0 +1,35 @@
+Version 0.8 - July/31/2014
+
+Software requirements
+
+- Geant4 4.9.6.p02
+- GDML 3.1.0 (Geant4 library)
+- G4NDL 4.4 (Geant4 Data Source)
+- ROOT
+- Xerces 3.1.1 (GDML requirement)
+
+*CMAKE file configured for compilation
+
+
+Running the simulation
+
+- Make sure the GDML model "Chamber.gdml" file is in the root of the executable.
+- By default the simulation will create 1000 events using the macro [run_vis.mac]
+- To run the default simulation with the chamber invisible, type: XenExe invisible
+- To run a custom macro, type: XenExe [MACRO_FILE_NAME]
+
+
+Notes
+
+Color code for the particle tracking:
+    - Electron: Red.
+    - Proton: Blue.
+    - Neutron: White.
+    - Triton: Yellow.
+    - Gamma: Green.
+
+
+Future development
+
+- Comparison of the asymmetry-pressure and gas percentage mix dependence.
+- Variable neutron beam energy.
