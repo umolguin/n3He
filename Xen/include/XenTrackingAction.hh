@@ -22,8 +22,8 @@ class XenTrackingAction : public G4UserTrackingAction
     virtual ~XenTrackingAction();
 
 
-    virtual void PreUserTrackingAction(G4Track*);
-    virtual void PostUserTrackingAction(G4Track*);
+    virtual void PreUserTrackingAction(const G4Track*);
+    virtual void PostUserTrackingAction(const G4Track*);
 
 
 

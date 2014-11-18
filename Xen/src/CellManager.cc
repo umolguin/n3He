@@ -1,5 +1,7 @@
 #include "CellManager.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4PhysicalConstants.hh"
+
 
 G4double CellManager::nFrames=0;
 G4double CellManager::nWires=0;
@@ -76,9 +78,9 @@ void CellManager::print()
 }
 
 ///ZERO INDEXED!!
-G4double CellManager::getGFactor(G4int row, G4int column)
+G4double CellManager::getGFactor(G4int row, G4int column)//9,16
 {
-    G4int _index=column*nWires+row;
+    G4int _index=row*nFrames+column;
     G4double _gFactor;
     if(sumEnergy[_index]>0)
         _gFactor=sumCosEnergy[_index]/sumEnergy[_index];
@@ -89,7 +91,7 @@ G4double CellManager::getGFactor(G4int row, G4int column)
 
 G4double CellManager::getDFactor(G4int row, G4int column)
 {
-    G4int _index=column*nWires+row;
+    G4int _index=column*nFrames+row;
     G4double _dFactor;
     if(sumEnergy[_index]>0)
         _dFactor=sumBEnergy[_index]/sumEnergy[_index];
@@ -275,6 +277,7 @@ void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momen
 		}
 		sumCosBEnergy[arrayPos]+=cos(_theta)*energy;
 		sumBEnergy[arrayPos]+=energy;
+		print();
 	}
 
 }

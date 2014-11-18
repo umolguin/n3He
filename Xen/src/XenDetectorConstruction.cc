@@ -9,6 +9,7 @@
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4PhysicalConstants.hh"
 #include "G4UserLimits.hh"
 
 #include "XenDetectorConstruction.hh"
@@ -23,7 +24,16 @@
 using namespace std;
 
 ///@author Carlos Olguin
-///@version 0.8
+///@version 0.8.1
+///
+// Notes:
+// - When the world is less than 300 cm neutrons interact incorrectly and differently between
+// different rows.
+// - Array of "real" cells was tried against cloning the logical volumes. Bug previously described is
+// still present.
+//
+//
+
 
 
 XenDetectorConstruction::XenDetectorConstruction(): G4VUserDetectorConstruction()
@@ -45,7 +55,7 @@ G4VPhysicalVolume* XenDetectorConstruction::Construct()
     //Materials
     G4double density1 = 2.700*g/cm3;
     G4double a = 26.98*g/mole;
-    G4Material* Al = new G4Material("Aluminium", 13., a, density1);
+    G4Material* Al = new G4Material("Aluminum", 13., a, density1);
 //
 //
 //    G4Isotope* He3Iso = new G4Isotope("3HeIso", 2,3,3.016023*g/mole);
@@ -61,7 +71,7 @@ G4VPhysicalVolume* XenDetectorConstruction::Construct()
     G4Element* He3 = new G4Element("Helium3", "He3", isotopes=1);
     He3->AddIsotope(he3, 100*perCent);
 
-    G4double pressure = 1*atmosphere;
+    G4double pressure =.5*atmosphere;
     G4double temperature = 273.15*kelvin;
     G4double molar_constant = Avogadro*k_Boltzmann;  //from clhep
     G4double density = (atomicMass*pressure)/(temperature*molar_constant);// Ideal gas law
@@ -69,15 +79,15 @@ G4VPhysicalVolume* XenDetectorConstruction::Construct()
     matHelium3Gas->AddElement(He3, 100*perCent);
 
 
-    ////_____________GDML
+    //_____________GDML
 //    G4GDMLParser parser;
 //    parser.Read("Chamber3DMAX.gdml");
-//    parser.Read("xwing.gdml");
-
+////    parser.Read("xwing.gdml");
+//
 ////    Add properties
 //    G4VPhysicalVolume* W=parser.GetWorldVolume();
 //    G4LogicalVolume* lv = W->GetLogicalVolume();
-    ////_____________GDML
+//    //_____________GDML
 
 //    G4double maxStep = 2*mm;
 //    Set the step length to 2 mm
@@ -101,6 +111,10 @@ G4VPhysicalVolume* XenDetectorConstruction::Construct()
 //    G4Box** _cells = static_cast<G4Box**>( ::operator new ( sizeof(G4Box) * 144 ) );
 //    G4LogicalVolume** _lCells=static_cast<G4LogicalVolume**>( ::operator new ( sizeof(G4LogicalVolume) * 144 ) );
 
+//    G4Box *_cellsDyna[144];//This implementation appears to work better with LastHopeU
+//    G4LogicalVolume *_lCellsDyna[144];
+
+
     //G4Box* _cells= new G4Box("Cell",8.001*cm,.95*cm,.95*cm);
     double _cX=16.02*cm; double _cY=1.905*cm; double _cZ=1.905*cm;
 
@@ -115,21 +129,9 @@ G4VPhysicalVolume* XenDetectorConstruction::Construct()
 
 
 
-//    std::stringstream sstm;
-//    // invoke constuctors
-//    for ( size_t i = 0; i < 144; i++ )
-//    {
-//        sstm << "Box" << i;
-//        new (&_cells[i]) G4Box( sstm.str(), 10, 10, 10);
-//        sstm.clear();
-//    }
-//
-//    for ( size_t i = 0; i < 144; i++ )
-//    {
-//        sstm << "Box" << i;
-//        new (&_lCells[i]) G4LogicalVolume(_cells[i],matHelium3Gas,sstm.str());
-//        sstm.clear();
-//    }
+
+    // invoke constuctors
+
 
     //Set material to the whole world
    // lv->SetMaterial(matHelium3Gas);
@@ -196,13 +198,17 @@ G4VPhysicalVolume* XenDetectorConstruction::Construct()
                    0,                // copy number
                    true);  // checking overlaps
 
-//    //////////////???????????????????????????????????????????
+////    //////////////???????????????????????????????????????????
 //	new G4PVPlacement(0,G4ThreeVector(0,0,(15.24+(1.25/2))*cm),_cylTar1Log,"Tar1",lv,false,_frontWindowID,true);
 //	new G4PVPlacement(0,G4ThreeVector(0,0,(-15.24-(1.25/2))*cm),_cylTar1Log,"Tar1",lv,false,_backWindowID,true);
     for(int i=0; i<9;i++)
         for(int j=0;j<16;j++)
         {
-            new G4PVPlacement(0, G4ThreeVector(0,((8.57-1.905/2)*cm)-(i*_cY),((15.24-1.905/2)*cm)-(j*_cZ)),_lCells,"Cell",lv,false,10+(j+(i*16)),true);
+//        	int _index=i*16+j;
+//        	std::stringstream sstm;
+//        	sstm << "Box" << _index;
+            new G4PVPlacement(0, G4ThreeVector(0,((8.57-1.905/2)*cm)-(i*_cY),((15.24-1.905/2)*cm)-(j*_cZ)),_lCells,"CELLS",lv,false,10+(j+(i*16)),true);
+//            sstm.clear();
         }
 
 //    new G4PVPlacement(0, G4ThreeVector(0,0,(0)*cm),_lCells2,"Cells2",lv,false,0,true);

@@ -9,6 +9,7 @@
 #include "G4RunManager.hh"
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4PhysicalConstants.hh"
 #include "TFile.h"
 #include "TH1F.h"
 
@@ -44,7 +45,7 @@ void XenRunAction::BeginOfRunAction(const G4Run* aRun)
     man->OpenFile("Histograms");
     man->SetFirstHistoId(1);
     // Create histogram(s)
-    man->CreateH1("ionDist","Ionization distribution", 18, -.8*cm, 2.8*cm);//TODO: change to the appropiate size
+    man->CreateH1("ionDist","Ionization distribution", 18, -.8*cm, 2.8*cm);//TODO: change to the appropriate size
     man->CreateH1("asym","Asymmetry", 20, -1, 1);
     man->CreateH1("asymDeg","Asymmetry in rad", 50, 0, 3.14);
     man->CreateH1("wlDist","Wave Length Distribution", 100, 0, 1);
@@ -67,15 +68,25 @@ void XenRunAction::EndOfRunAction(const G4Run* aRun)
 {
     G4AnalysisManager* man =G4AnalysisManager::Instance();
 
-	for(int i=0; i<9;i++)
-			for(int j=0;j<16;j++)
-				man->FillH2(1, i,j,CellManager::getGFactor(j,i));
+    std::ofstream ofs2 ("geometricFactorXenRunAction.dat");
 
-    for(int i=0;i<=16;i++)
-            for(int j=0;j<=9;j++){
-            	G4double _d= CellManager::getDFactor(j,i);
-                man->FillH2(2, i,j,_d);
-            }
+	for(int i=0; i<9;i++)
+	{
+			for(int j=0;j<16;j++)
+			{
+				man->FillH2(1, j,i,CellManager::getGFactor(i,j));
+				G4int _index=i*16+j;
+				ofs2 <<"	"<<CellManager::getGFactor(i,j);
+			}
+			ofs2<<std::endl;
+	}
+	ofs2.close();
+
+//    for(int i=0;i<=16;i++)
+//            for(int j=0;j<=9;j++){
+//            	G4double _d= CellManager::getDFactor(j,i);
+//                man->FillH2(2, i,j,_d);
+//            }
 
     G4int nofEvents = aRun->GetNumberOfEvent();
     if (nofEvents == 0) return;

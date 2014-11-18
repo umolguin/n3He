@@ -18,7 +18,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 file(GLOB my_project_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
-set(CMAKE_MODULE_PATH /home/umolguin/geant/init/cmake/Modules)
+set(CMAKE_MODULE_PATH /home/rckstr/geant/init/cmake/Modules)
 
 #add specific flags for compiler (this is for random normal distribution)
 

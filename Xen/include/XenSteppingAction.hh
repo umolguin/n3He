@@ -52,7 +52,7 @@ class XenSteppingAction : public G4UserSteppingAction
     static XenSteppingAction* Instance();
 
     // method from the base class
-    virtual void UserSteppingAction(G4Step*);
+    virtual void UserSteppingAction(const G4Step*);
 
     // reset accumulated energy
     void Reset();

@@ -8,6 +8,7 @@
 #include "G4ParticleTable.hh"
 #include "G4ParticleDefinition.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4PhysicalConstants.hh"
 #include "Randomize.hh"
 #include "EnergyManager.hh"
 #include "XenAnalysis.hh"

@@ -38,6 +38,8 @@
 #include "G4RunManager.hh"
 #include "G4UnitsTable.hh"
 #include "G4VProcess.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4PhysicalConstants.hh"
 
 #include "XenAnalysis.hh"
 #include <cmath>
@@ -76,10 +78,8 @@ XenSteppingAction::~XenSteppingAction()
 }
 
 
-void XenSteppingAction::UserSteppingAction(G4Step* step)
+void XenSteppingAction::UserSteppingAction(const G4Step* step)
 {
-
-    //G4LogicalVolume* volume= step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
     G4Track* track     = step->GetTrack();
     const G4ParticleDefinition* part = track->GetDefinition();
     G4cout << "[T]Track #"
@@ -151,11 +151,10 @@ void XenSteppingAction::UserSteppingAction(G4Step* step)
             if(XenSteppingAction::isFirstProton)
             {
                 G4cout<<"[M]Overriding momentum lastProton"<<G4endl;
-                OverrideMomentumDirection(step);
+                //OverrideMomentumDirection(step);
                 XenSteppingAction::isFirstProton=false;
                 //XenSteppingAction::isNewParticle=false;
                 track=step->GetTrack();
-
 
             }
 
@@ -213,7 +212,7 @@ void XenSteppingAction::UserSteppingAction(G4Step* step)
             XenSteppingAction::isFirstProton=true;
             if(XenSteppingAction::isNewParticle)
             {
-                OverrideMomentumDirection(step);
+                //OverrideMomentumDirection(step);
                 XenSteppingAction::isNewParticle=false;
 //                track=step->GetTrack();
 //                double _currentZMomentum=track->GetMomentumDirection().z();
@@ -242,7 +241,7 @@ void XenSteppingAction::UserSteppingAction(G4Step* step)
             {
                 G4cout<<"[T][A]EnergyDep:"<<XenEventAction::accumDelta<<",delta:"<<_delta<<G4endl;
                 //man->FillH2(1, i,j,CellManager::getGFactor(j,i)*10);
-                CellManager::addEnergy(XenEventAction::accumDelta,XenEventAction::lastCellID-10,track->GetVertexMomentumDirection () ,false);
+                CellManager::addEnergy(XenEventAction::accumDelta,XenEventAction::lastCellID,track->GetVertexMomentumDirection () ,false);
                 XenEventAction::accumDelta=0;
             }
             else

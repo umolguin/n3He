@@ -1,5 +1,6 @@
 #include "MomentumManager.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4PhysicalConstants.hh"
 #include "RandomGEN.hh"
 
 #include <iostream>

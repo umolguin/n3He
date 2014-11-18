@@ -3,13 +3,15 @@
 #include "G4RandomDirection.hh"
 #include "G4Proton.hh"
 #include "G4Triton.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4PhysicalConstants.hh"
 
 XenTrackingAction::XenTrackingAction()
 : G4UserTrackingAction(){}
 XenTrackingAction::~XenTrackingAction()
 {
 }
-void XenTrackingAction::PostUserTrackingAction(G4Track* aTrack)
+void XenTrackingAction::PostUserTrackingAction(const G4Track* aTrack)
 {
 	 if(aTrack != NULL){
 	     if(aTrack->GetParentID() == 0){
@@ -39,7 +41,7 @@ void XenTrackingAction::PostUserTrackingAction(G4Track* aTrack)
 	     }
 	   }
 }
-void XenTrackingAction::PreUserTrackingAction(G4Track* track)
+void XenTrackingAction::PreUserTrackingAction(const G4Track* track)
 {
    //track->SetMomentumDirection(G4ThreeVector(1,0,0.0));
 }

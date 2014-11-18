@@ -50,7 +50,7 @@
 #include "G4NeutronHPElastic.hh"
 #include "G4ProcessManager.hh"
 #include "XenPhysicsList.hh"
-#include "G4StepLimiterBuilder.hh"
+
 
 #ifdef G4VIS_USE
 #include "G4VisExecutive.hh"
@@ -89,7 +89,7 @@ int main(int argc,char** argv)
     // Physics list
     //QGSP_BERT_HP physics list contains reference to the necessary data sets and calculations for cold neutrons
     G4VModularPhysicsList* physicsList= new QGSP_BERT_HP;
-    physicsList->RegisterPhysics(new G4StepLimiterBuilder());
+//    physicsList->RegisterPhysics(new G4StepLimiterBuilder());
     physicsList->SetVerboseLevel(1);
 
     runManager->SetUserInitialization(physicsList);
