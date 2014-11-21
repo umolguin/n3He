@@ -109,4 +109,4 @@
 
 /control/verbose 0
 
-/run/beamOn 10000
+/run/beamOn 100

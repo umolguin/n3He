@@ -45,11 +45,17 @@
 #include "G4UImanager.hh"
 #include "QBBC.hh"
 #include "QGSP_BERT_HP.hh"
+#include "G4VModularPhysicsList.hh"
+#include "G4RadioactiveDecayPhysics.hh"
+#include "G4RadioactiveDecay.hh"
+
 #include "G4HadronElasticProcess.hh"
 #include "G4NeutronHPElasticData.hh"
 #include "G4NeutronHPElastic.hh"
 #include "G4ProcessManager.hh"
-#include "XenPhysicsList.hh"
+#include "PhysicsList.hh"
+#include "G4UAtomicDeexcitation.hh"
+#include "G4LossTableManager.hh"
 
 
 #ifdef G4VIS_USE
@@ -64,60 +70,51 @@
 
 #include "G4GDMLParser.hh"
 #include "GDMLDetectorConstruction.hh"
+#include "Logger.hh"
 using namespace std;
 
 class CellManager;
 int main(int argc,char** argv)
 {
-    // Construct the default run manager
-    //
-    G4RunManager * runManager = new G4RunManager;
+    //Set non-G4 classes
+	Logger::init("run.log");
+    CellManager::init();
+	EnergyManager::init();//Energy manager initialization - helps with the Gaussian distribution
+	MomentumManager::init();
+	EnergyManager::setRangeWaveLength(.32,.69);
+
 
     // Set mandatory initialization classes
-    string _inv=("invisible\n");
-    if(argc!=1 && _inv.compare(argv[1])!=0){
-
-        runManager->SetUserInitialization(new XenDetectorConstruction(false));
-    }
-    else{
-        //CellManager init
-        CellManager::init();
-
-        runManager->SetUserInitialization(new XenDetectorConstruction());}
-
-
+	// Construct the default run manager
+	G4RunManager * runManager = new G4RunManager;
+	runManager->SetUserInitialization(new XenDetectorConstruction());
     // Physics list
     //QGSP_BERT_HP physics list contains reference to the necessary data sets and calculations for cold neutrons
     G4VModularPhysicsList* physicsList= new QGSP_BERT_HP;
+
+//    G4RadioactiveDecay* radioactiveDecay = new G4RadioactiveDecay();
+//      //Caution! With G4MT migration this threshold can no longer be set smaller
+//      //than nanosecond
+//      radioactiveDecay->SetHLThreshold(nanosecond);
+//
+//      radioactiveDecay->SetICM(true);                //Internal Conversion
+//      radioactiveDecay->SetARM(false);               //Atomic Rearangement
+//     physicsList->RegisterPhysics(radioactiveDecay);
+   G4VPhysicsConstructor* _rad=new G4RadioactiveDecayPhysics ();
+
+
+   physicsList->RegisterPhysics( _rad);
 //    physicsList->RegisterPhysics(new G4StepLimiterBuilder());
-    physicsList->SetVerboseLevel(1);
-
-    runManager->SetUserInitialization(physicsList);
-
-    //Energy manager initialization - helps with the Gaussian distribution
-    EnergyManager::init();
-    MomentumManager::init();
-    //EnergyManager::setRangeWaveLength(0,1);
-    EnergyManager::setRangeWaveLength(.32,.69);
-
+    //physicsList->SetVerboseLevel(1);
+   // runManager->SetUserInitialization(physicsList);
+   runManager->SetUserInitialization(physicsList);
 
     // Primary generator action
     runManager->SetUserAction(new XenPrimaryGeneratorAction());
-
-    // Set user action classes
-    //
-    // Stepping action
     runManager->SetUserAction(new XenSteppingAction());
     runManager->SetUserAction(new XenTrackingAction());
-
-    // Event action
     runManager->SetUserAction(new XenEventAction());
-
-    // Run action
     runManager->SetUserAction(new XenRunAction());
-
-
-
     runManager->Initialize();
 
 
@@ -129,7 +126,8 @@ int main(int argc,char** argv)
 
   // Get the pointer to the User Interface manager
   G4UImanager* UImanager = G4UImanager::GetUIpointer();
-  if (argc!=1&&_inv.compare(argv[1])==0) {
+  UImanager->ApplyCommand("/control/execute init.mac");
+  if (argc!=1) {
     // batch mode
     G4String command = "/control/execute ";
     G4String fileName = argv[1];

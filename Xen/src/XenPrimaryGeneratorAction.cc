@@ -47,7 +47,11 @@ XenPrimaryGeneratorAction::~XenPrimaryGeneratorAction()
 
 void XenPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
-
+	//_GenPrimary(anEvent);
+	_GenTest(anEvent);
+}
+void XenPrimaryGeneratorAction::_GenPrimary(G4Event* anEvent)
+{
     //Changed to Gaussian distribution
     G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
 
@@ -84,6 +88,52 @@ void XenPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     //G4double z0 = -0.5 * envSizeZ;
     //z0=4.7*cm;//This would be the position just at the beginning of the right window.
     G4double z0=200*cm;
+    //y0=8*cm;
+    G4cout<<"[GUN]:("<<x0<<","<<y0<<","<<z0<<")"<<G4endl;
+  fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
+  fParticleGun->GeneratePrimaryVertex(anEvent);
+}
+
+void XenPrimaryGeneratorAction::_GenTest(G4Event* anEvent)
+{
+    //Changed to Gaussian distribution
+    G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+
+    double _wl=EnergyManager::getEnergy();
+    analysisManager->FillH1(4, _wl);
+    double _energy=(0.841/(_wl*_wl));
+    //fParticleGun->SetParticleEnergy((_energy/1000)*eV);
+    fParticleGun->SetParticleEnergy(5.0*eV);
+    G4cout<<"[E]Energy:"<<fParticleGun->GetParticleEnergy()<<"meV"<<G4endl;
+	/***
+	 * This is not part of original source
+	 */
+
+  G4double envSizeXY = 0;
+  G4double envSizeZ = 0;
+
+  G4LogicalVolume* envLV= G4LogicalVolumeStore::GetInstance()->GetVolume("World");
+  G4Box* envBox = NULL;
+  if ( envLV ) envBox = dynamic_cast<G4Box*>(envLV->GetSolid());
+  if ( envBox ) {
+    envSizeXY = envBox->GetXHalfLength()*2.;
+    envSizeZ = envBox->GetZHalfLength()*2.;
+  }
+  else  {
+    G4cerr << "Envelope volume of box shape not found." << G4endl;
+    G4cerr << "Perhaps you have changed geometry." << G4endl;
+    G4cerr << "The gun will be place in the center." << G4endl;
+  }
+
+//--------------------------------------------------------------------------
+    G4double size = 50;
+    G4double x0 = size*(G4UniformRand()-0.5);
+    G4double y0 = size*(G4UniformRand()-0.5);
+    //G4double z0 = -0.5 * envSizeZ;
+    //z0=4.7*cm;//This would be the position just at the beginning of the right window.
+    G4double z0=200*cm;
+    x0=0;
+    y0=0*cm;
     G4cout<<"[GUN]:("<<x0<<","<<y0<<","<<z0<<")"<<G4endl;
   fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
   fParticleGun->GeneratePrimaryVertex(anEvent);

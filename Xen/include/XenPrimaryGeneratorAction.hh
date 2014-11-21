@@ -31,6 +31,8 @@ class XenPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 
     G4ParticleGun*  fParticleGun; // pointer a to G4 gun class
     G4int myEventCounter;
+    void _GenPrimary(G4Event*);
+    void _GenTest(G4Event*);
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

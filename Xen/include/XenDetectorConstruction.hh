@@ -20,6 +20,11 @@ class XenDetectorConstruction : public G4VUserDetectorConstruction
   public:
     virtual G4VPhysicalVolume* Construct();
     bool _visible;
+  private:
+    G4VPhysicalVolume* _GDML();
+    G4VPhysicalVolume* _CellsOnly();
+    G4VPhysicalVolume* _SmallBox();
+    G4VPhysicalVolume* _FilledWorld();
 
 
 };

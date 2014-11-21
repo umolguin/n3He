@@ -45,6 +45,7 @@
 #include <cmath>
 
 #include "CellManager.hh"
+#include "Logger.hh"
 
 ///@author Carlos Olguin
 ///@version 0.8
@@ -80,13 +81,15 @@ XenSteppingAction::~XenSteppingAction()
 
 void XenSteppingAction::UserSteppingAction(const G4Step* step)
 {
+	Logger::log("Step","__________________Start STEP_____________________________");
+	std::stringstream sstm;
     G4Track* track     = step->GetTrack();
     const G4ParticleDefinition* part = track->GetDefinition();
-    G4cout << "[T]Track #"
+    sstm << "[T]Track #"
     << track->GetTrackID() << " of " << part->GetParticleName()
     << " E(MeV)= " << track->GetKineticEnergy()/MeV
-    << " produced by Track ID= " << track->GetParentID()
-    << G4endl;
+    << " produced by Track ID= " << track->GetParentID();
+    Logger::log("Step",sstm.str());sstm.clear();
 
     // Kinetic energy
     G4double ken = track->GetKineticEnergy()/MeV;
@@ -94,8 +97,29 @@ void XenSteppingAction::UserSteppingAction(const G4Step* step)
     // energy deposit
     G4double edep = step->GetTotalEnergyDeposit();
 
-    G4cout<<"[D]ProcessNamePost: "<<step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName()<<", with edep:"<<edep/MeV<<", ("<<track->GetPosition().x()<<","<<track->GetPosition().y()<<","<<track->GetPosition().z()<<")"<<G4endl;
 
+    sstm<<"ProcessName: "<<step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName()<<", Delta:"<<step->GetDeltaMomentum()<<", with edep:"<<edep/MeV<<", ("<<track->GetPosition().x()<<","<<track->GetPosition().y()<<","<<track->GetPosition().z()<<")"<<std::endl;
+    const std::vector<const G4Track*>* secondary = step->GetSecondaryInCurrentStep();
+	size_t nbtrk = (*secondary).size();
+	if (nbtrk) {
+		sstm <<"\n    :----- List of secondaries ----------------" << G4endl;
+		sstm.precision(4);
+		for (size_t lp=0; lp<(*secondary).size(); lp++) {
+		 sstm << "   "
+				<< std::setw(13)
+				<< (*secondary)[lp]->GetDefinition()->GetParticleName()
+				<< ":  energy ="
+				<< std::setw(6)
+				<< G4BestUnit((*secondary)[lp]->GetKineticEnergy(),"Energy")
+				<< "  time ="
+				<< std::setw(6)
+				<< G4BestUnit((*secondary)[lp]->GetGlobalTime(),"Time");
+		 sstm << G4endl;
+		}
+
+		sstm << "    :------------------------------------------\n" << G4endl;
+	}
+         Logger::log("Step",sstm.str());
 
     ////////////////
 
