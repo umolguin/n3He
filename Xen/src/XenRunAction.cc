@@ -15,12 +15,15 @@
 
 #include "CellManager.hh"
 #include "EnergyManager.hh"
+#include "Logger.hh"
 
 ///@author Carlos Olguin
 ///@version 0.8
 
 double XenRunAction::_energy=0;
 double XenRunAction::_bEnergy=0;
+int XenRunAction::_eventCounter=0;
+
 
 XenRunAction::XenRunAction()
 : G4UserRunAction()
@@ -33,6 +36,11 @@ XenRunAction::~XenRunAction()
 
 void XenRunAction::BeginOfRunAction(const G4Run* aRun)
 {
+	std::stringstream sstm;
+	sstm<<"Running[EventN="<<_eventCounter<<"]"<<std::endl;
+	std::cout<<sstm.str();
+
+	Logger::log("RunEventAction",sstm.str());
     G4UImanager::GetUIpointer()->ApplyCommand("/vis/scene/notifyHandlers");
     G4cout << "### Run " << aRun->GetRunID() << " start." << G4endl;
 
@@ -49,15 +57,13 @@ void XenRunAction::BeginOfRunAction(const G4Run* aRun)
     man->CreateH1("asym","Asymmetry", 20, -1, 1);
     man->CreateH1("asymDeg","Asymmetry in rad", 50, 0, 3.14);
     man->CreateH1("wlDist","Wave Length Distribution", 100, 0, 1);
-    man->CreateH1("xMomentum","Initial Momentum along #hatx", 200, -1, 1);
-    man->CreateH1("yMomentum","Initial Momentum along #haty", 200, -1, 1);
-    man->CreateH1("zMomentum","Initial Momentum along #hatz", 200, -1, 1);
+    man->CreateH1("beta","Beta Energy", 30, 0, 3);//ID=5,
+    man->CreateH1("allE","All Electrons Energy", 50, 0, 5);
+    man->CreateH1("allG","All Al28 Energy", 70, 0, 7);
 
-    man->CreateH1("rnd","Random Distribution", 200, -1, 1);
-    man->CreateH1("sinn","Sin(rnd)", 200, -1, 1);
 
     man->CreateH2("GeometricFactor","Geometric Factor",16,0,16,9,0,9);
-    man->CreateH2("dilution","Dilution Factor",16,0,16,9,0,9);
+    man->CreateH2("background","Background signal ratio",16,0,16,9,0,9);
 
     EnergyManager::printDist();
 
@@ -80,6 +86,32 @@ void XenRunAction::EndOfRunAction(const G4Run* aRun)
 			}
 			ofs2<<std::endl;
 	}
+	ofs2<<std::endl<<std::endl;
+	ofs2<<"------------------------ Energy deposited from Protons and Tritons --------------------------"<<std::endl;
+	ofs2<<std::endl<<std::endl;
+	for(int i=0; i<9;i++)
+		{
+				for(int j=0;j<16;j++)
+				{
+
+					G4int _index=i*16+j;
+					ofs2 <<"	"<<CellManager::getEnergyFromP_T(i,j);
+				}
+				ofs2<<std::endl;
+		}
+	ofs2<<"FrontWindow:"<<CellManager::sumEnergyFrontWindow<<", BackWindow:"<<CellManager::sumEnergyBackWindow<<", NonCellEnergy:"<<CellManager::sumNonCellEnergy<<std::endl;
+	ofs2<<std::endl<<std::endl;
+	ofs2<<"------------------------ Energy deposited from Betas --------------------------"<<std::endl;
+	ofs2<<std::endl<<std::endl;
+	for(int i=0; i<9;i++)
+		{
+				for(int j=0;j<16;j++)
+				{
+					ofs2 <<"	"<<CellManager::getEnergyFromBeta(i,j);
+				}
+				ofs2<<std::endl;
+		}
+	ofs2<<"FrontWindowB:"<<CellManager::sumBEnergyFrontWindow<<", BackWindowB:"<<CellManager::sumBEnergyBackWindow<<", NonCellBEnergy:"<<CellManager::sumNonCellBEnergy<<std::endl;
 	ofs2.close();
 
 //    for(int i=0;i<=16;i++)

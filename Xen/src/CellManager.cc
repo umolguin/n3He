@@ -15,6 +15,7 @@ G4double CellManager::initZ=0;
 
 G4double* CellManager::sumCosEnergy;
 G4double* CellManager::sumEnergy;
+G4double CellManager::sumNonCellEnergy;
 
 G4double CellManager::sumCosEnergyFrontWindow;
 G4double CellManager::sumEnergyFrontWindow;
@@ -23,6 +24,7 @@ G4double CellManager::sumEnergyBackWindow;
 
 G4double* CellManager::sumCosBEnergy;
 G4double* CellManager::sumBEnergy;
+G4double CellManager::sumNonCellBEnergy;
 
 G4double CellManager::sumCosBEnergyFrontWindow;
 G4double CellManager::sumBEnergyFrontWindow;
@@ -98,6 +100,16 @@ G4double CellManager::getDFactor(G4int row, G4int column)
     else
         _dFactor=0;
     return _dFactor;
+}
+G4double CellManager::getEnergyFromP_T(G4int row, G4int column )
+{
+	G4int _index=row*nFrames+column;
+	return sumEnergy[_index];
+}
+G4double CellManager::getEnergyFromBeta(G4int row, G4int column )
+{
+	G4int _index=row*nFrames+column;
+	return sumBEnergy[_index];
 }
 
 void CellManager::init()
@@ -210,6 +222,7 @@ void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momen
 	/// IDs
 	const int _frontWindowID=3;
 	const int _backWindowID=9;
+	const int _else=0;
 	///
 
 
@@ -239,6 +252,7 @@ void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momen
         }
     }
     if(!isBeta){
+    	if(arrayPos==_else)sumNonCellEnergy=+energy;
 		if(arrayPos==_frontWindowID)
 		{
 			sumCosEnergyFrontWindow+=cos(_theta)*energy;
@@ -252,13 +266,14 @@ void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momen
 		arrayPos-=10;
 		if(arrayPos<0)
 		{
-			G4cout<<"[T]Sorry out of range"<<G4endl;
+			G4cout<<"[T]Sorry out of cell range"<<G4endl;
 			return;
 		}
 		sumCosEnergy[arrayPos]+=cos(_theta)*energy;
 		sumEnergy[arrayPos]+=energy;
     }
     else{
+    	if(arrayPos==_else)sumNonCellBEnergy=+energy;
 		if(arrayPos==_frontWindowID)
 		{
 			sumCosBEnergyFrontWindow+=cos(_theta)*energy;
@@ -272,7 +287,7 @@ void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momen
 		arrayPos-=10;
 		if(arrayPos<0)
 		{
-			G4cout<<"[T]Sorry out of range"<<G4endl;
+			G4cout<<"[T]Sorry out of cell range"<<G4endl;
 			return;
 		}
 		sumCosBEnergy[arrayPos]+=cos(_theta)*energy;

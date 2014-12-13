@@ -5,7 +5,7 @@
 #include "G4THitsMap.hh"
 #include "globals.hh"
 #include "G4ThreeVector.hh"
-
+#include <vector>
 class XenSteppingAction;
 
 /// Event action class
@@ -25,7 +25,7 @@ class XenEventAction : public G4UserEventAction
   static G4double accumDelta;
   static G4int lastCellID;
   static G4ThreeVector initialMomentum;
-
+  static std::vector<int> al28IDs;
   static G4double lastTrackID;
   static double lastZMomentum;
 

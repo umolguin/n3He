@@ -8,6 +8,7 @@
 #include "G4SDManager.hh"
 #include "G4Event.hh"
 #include "G4HCofThisEvent.hh"
+#include <vector>
 
 class G4Run;
 
@@ -31,6 +32,10 @@ class XenRunAction : public G4UserRunAction
 
     static double _energy;
     static double _bEnergy;
+
+  private:
+    static int _eventCounter;
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

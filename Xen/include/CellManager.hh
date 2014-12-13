@@ -14,8 +14,11 @@ class CellManager
         static void addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momentum, bool isBeta);
         static G4double getGFactor(G4int row, G4int column);
         static G4double getDFactor(G4int row, G4int column);
+        static G4double getEnergyFromBeta(G4int row, G4int column);
+        static G4double getEnergyFromP_T(G4int row, G4int column);
         static double* sumCosEnergy;
         static double* sumEnergy;
+        static double sumNonCellEnergy;
         static double sumEnergyFrontWindow;
         static double sumEnergyBackWindow;
         static double sumCosEnergyFrontWindow;
@@ -23,6 +26,7 @@ class CellManager
 		//TODO:EWWWWWWWW this is awful, fix it!
         static double* sumCosBEnergy;
         static double* sumBEnergy;
+        static double sumNonCellBEnergy;
         static double sumBEnergyFrontWindow;
         static double sumBEnergyBackWindow;
         static double sumCosBEnergyFrontWindow;

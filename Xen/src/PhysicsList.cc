@@ -28,9 +28,9 @@
 //
 //
 // $Id: PhysicsList.cc 73284 2013-08-23 08:35:02Z gcosmo $
-//
+// 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo...... 
 
 #include "PhysicsList.hh"
 #include "G4UnitsTable.hh"
@@ -41,25 +41,14 @@
 #include "G4UAtomicDeexcitation.hh"
 #include "G4LossTableManager.hh"
 #include "G4SystemOfUnits.hh"
-#include "G4VPhysicsConstructor.hh"
-#include "G4HadronPhysicsQGSP_BERT_HP.hh"
-#include "G4RadioactiveDecayPhysics.hh"
-#include "G4DecayPhysics.hh"
-#include "G4EmStandardPhysics.hh"
-#include "G4HadronPhysicsQGSP_BERT.hh"
-#include "G4HadronPhysicsQGSP_BIC.hh"
-#include "G4HadronPhysicsQGSP_BERT_HP.hh"
-#include "G4HadronPhysicsQGSP_BIC_HP.hh"
-#include "G4VModularPhysicsList.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 PhysicsList::PhysicsList()
-: G4VModularPhysicsList()
+: G4VUserPhysicsList()
 {
-	SetVerboseLevel(1);
   //add new units for radioActive decays
-  //
+  // 
   const G4double minute = 60*second;
   const G4double hour   = 60*minute;
   const G4double day    = 24*hour;
@@ -67,7 +56,7 @@ PhysicsList::PhysicsList()
   new G4UnitDefinition("minute", "min", "Time", minute);
   new G4UnitDefinition("hour",   "h",   "Time", hour);
   new G4UnitDefinition("day",    "d",   "Time", day);
-  new G4UnitDefinition("year",   "y",   "Time", year);
+  new G4UnitDefinition("year",   "y",   "Time", year);        
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -81,7 +70,7 @@ void PhysicsList::ConstructParticle()
 {
   // pseudo-particles
   G4Geantino::GeantinoDefinition();
-
+  
   // gamma
   G4Gamma::GammaDefinition();
 
@@ -91,51 +80,40 @@ void PhysicsList::ConstructParticle()
 
   G4NeutrinoE::NeutrinoEDefinition();
   G4AntiNeutrinoE::AntiNeutrinoEDefinition();
-
+  
   // baryons
   G4Proton::ProtonDefinition();
-  G4Neutron::NeutronDefinition();
-  G4Triton::TritonDefinition();
+  G4Neutron::NeutronDefinition();  
 
   // ions
   G4IonConstructor iConstructor;
-  iConstructor.ConstructParticle();
+  iConstructor.ConstructParticle();  
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void PhysicsList::ConstructProcess()
 {
-	//HadPhysicsList = new G4HadronPhysicsQGSP_BERT_HP(verboseLevel);
   AddTransportation();
+  
+  G4RadioactiveDecay* radioactiveDecay = new G4RadioactiveDecay();
+  //Caution! With G4MT migration this threshold can no longer be set smaller
+  //than nanosecond
+  radioactiveDecay->SetHLThreshold(nanosecond);
 
-//  G4RadioactiveDecay* radioactiveDecay = new G4RadioactiveDecay();
-//  //Caution! With G4MT migration this threshold can no longer be set smaller
-//  //than nanosecond
-//  radioactiveDecay->SetHLThreshold(nanosecond);
-//
-//  radioactiveDecay->SetICM(true);                //Internal Conversion
-//  radioactiveDecay->SetARM(false);               //Atomic Rearangement
-//
-//  G4PhysicsListHelper* ph = G4PhysicsListHelper::GetPhysicsListHelper();
-  G4VPhysicsConstructor*  fParticleList = new G4DecayPhysics();
-
-   //default physics
-
-   // EM physics
-  G4VPhysicsConstructor*  fEmPhysicsList = new G4EmStandardPhysics();
-	// em
-	  fEmPhysicsList->ConstructProcess();
-	  // decays
-	  fParticleList->ConstructProcess();
-
-	  // had
-	G4VPhysicsConstructor* fRaddecayList = new G4RadioactiveDecayPhysics();
-	fRaddecayList->ConstructProcess();
-	 G4VPhysicsConstructor* fHadPhysicsList=new G4HadronPhysicsQGSP_BERT_HP();
-	 this->RegisterPhysics(new G4HadronPhysicsQGSP_BERT_HP());
-	 //fHadPhysicsList->ConstructProcess();
-
+  radioactiveDecay->SetICM(true);                //Internal Conversion
+  radioactiveDecay->SetARM(false);               //Atomic Rearangement
+  
+  G4PhysicsListHelper* ph = G4PhysicsListHelper::GetPhysicsListHelper();  
+  ph->RegisterProcess(radioactiveDecay, G4GenericIon::GenericIon());
+      
+  // Deexcitation (in case of Atomic Rearangement)
+  //
+  G4UAtomicDeexcitation* de = new G4UAtomicDeexcitation();
+  de->SetFluo(true);
+  de->SetAuger(true);   
+  de->SetPIXE(false);  
+  G4LossTableManager::Instance()->SetAtomDeexcitation(de);  
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

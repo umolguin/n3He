@@ -4,15 +4,18 @@
 using namespace std;
 
 string Logger::_fileName="";
+int Logger::_verbose=0;
 
-void Logger::init(string fileName)
+void Logger::init(string fileName, int verbose)
 {
+	_verbose=verbose;
 	_fileName=fileName;
 	_writeLn("{"+CommonsAPI::getDateTime()+"}[Start]______________________________");
 }
 void Logger::_writeLn(string what)
 {
-	CommonsAPI::appendLine(_fileName+"\n", what);
+	if(_verbose==118)
+		CommonsAPI::appendLine(_fileName, what);
 }
 void Logger::log(LogType type,  string source,string message)
 {

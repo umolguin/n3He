@@ -71,13 +71,21 @@
 #include "G4GDMLParser.hh"
 #include "GDMLDetectorConstruction.hh"
 #include "Logger.hh"
+
+#include "G4PhysListFactory.hh"
+#include <unistd.h>
+
+
 using namespace std;
 
 class CellManager;
 int main(int argc,char** argv)
 {
+	int _verbose=0;
+	_verbose = getopt (argc, argv, "v");
+	//cout<<"verbose:"<<_verbose<<endl;
     //Set non-G4 classes
-	Logger::init("run.log");
+	Logger::init("run.log",_verbose);
     CellManager::init();
 	EnergyManager::init();//Energy manager initialization - helps with the Gaussian distribution
 	MomentumManager::init();
@@ -90,7 +98,19 @@ int main(int argc,char** argv)
 	runManager->SetUserInitialization(new XenDetectorConstruction());
     // Physics list
     //QGSP_BERT_HP physics list contains reference to the necessary data sets and calculations for cold neutrons
+
+	//*************************************Uncomment
     G4VModularPhysicsList* physicsList= new QGSP_BERT_HP;
+    G4PhysListFactory factory;
+	G4VModularPhysicsList* phys = 0;
+	G4String physName = "QGSP_BERT_HP";
+	phys = factory.GetReferencePhysList(physName);
+	phys->RegisterPhysics(new G4DecayPhysics());
+	phys->RegisterPhysics(new G4RadioactiveDecayPhysics());
+	runManager->SetUserInitialization(phys);
+	//*************************************Uncomment
+
+//	runManager->SetUserInitialization(new PhysicsList);
 
 //    G4RadioactiveDecay* radioactiveDecay = new G4RadioactiveDecay();
 //      //Caution! With G4MT migration this threshold can no longer be set smaller
@@ -100,14 +120,19 @@ int main(int argc,char** argv)
 //      radioactiveDecay->SetICM(true);                //Internal Conversion
 //      radioactiveDecay->SetARM(false);               //Atomic Rearangement
 //     physicsList->RegisterPhysics(radioactiveDecay);
-   G4VPhysicsConstructor* _rad=new G4RadioactiveDecayPhysics ();
 
 
-   physicsList->RegisterPhysics( _rad);
+//	G4VModularPhysicsList* physicsList= new QGSP_BERT_HP;
+//   physicsList->RegisterPhysics(new G4RadioactiveDecayPhysics ());
 //    physicsList->RegisterPhysics(new G4StepLimiterBuilder());
     //physicsList->SetVerboseLevel(1);
    // runManager->SetUserInitialization(physicsList);
-   runManager->SetUserInitialization(physicsList);
+
+
+
+   //runManager->SetUserInitialization(physicsList);
+
+
 
     // Primary generator action
     runManager->SetUserAction(new XenPrimaryGeneratorAction());
@@ -127,7 +152,7 @@ int main(int argc,char** argv)
   // Get the pointer to the User Interface manager
   G4UImanager* UImanager = G4UImanager::GetUIpointer();
   UImanager->ApplyCommand("/control/execute init.mac");
-  if (argc!=1) {
+  if (argc!=1&&1==0) {//lol
     // batch mode
     G4String command = "/control/execute ";
     G4String fileName = argv[1];

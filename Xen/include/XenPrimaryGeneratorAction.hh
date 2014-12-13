@@ -33,6 +33,10 @@ class XenPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
     G4int myEventCounter;
     void _GenPrimary(G4Event*);
     void _GenTest(G4Event*);
+    void _GenPrimaryGamma(G4Event*);
+    void _GenIons(G4Event*);
+    void _generator();
+    void _generatorIon();
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

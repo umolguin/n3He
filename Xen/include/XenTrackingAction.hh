@@ -13,7 +13,6 @@
 #include "G4TrackingManager.hh"
 #include "G4TrackVector.hh"
 
-
 class XenTrackingAction : public G4UserTrackingAction
 {
   public:
@@ -24,7 +23,6 @@ class XenTrackingAction : public G4UserTrackingAction
 
     virtual void PreUserTrackingAction(const G4Track*);
     virtual void PostUserTrackingAction(const G4Track*);
-
 
 
 };

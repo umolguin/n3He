@@ -43,7 +43,7 @@ class XenDetectorConstruction;
 class XenSteppingAction : public G4UserSteppingAction
 {
   public:
-  XenSteppingAction(XenDetectorConstruction* detectorConstruction,
+	XenSteppingAction(XenDetectorConstruction* detectorConstruction,
                     XenEventAction* eventAction);
     XenSteppingAction();
     virtual ~XenSteppingAction();
@@ -77,7 +77,11 @@ class XenSteppingAction : public G4UserSteppingAction
     G4TrackVector* fSecondary;
     XenEventAction* fEventAction;
     XenDetectorConstruction* fDetConstruction;
-
+    void _addAl28TrackID(int id);
+    bool _isParentAl28(int parentID);
+    void _cleanUserAction(const G4Step* step);
+    void _printStepSpecs(const G4Step* step);
+    void _fillHistos(const G4Step* step);
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

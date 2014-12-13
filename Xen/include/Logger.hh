@@ -14,7 +14,7 @@ class Logger
 {
     public:
 
-        static void init(string _fileName);
+        static void init(string _fileName, int verbose);
         static void setOrigin(G4double x, G4double y, G4double z);
         static void log(LogType type, string source,string message);
         static void log(string source, string message);
@@ -23,6 +23,7 @@ class Logger
     private:
         static void _writeLn(string what);
         static string _fileName;
+        static int _verbose;
 
 
 

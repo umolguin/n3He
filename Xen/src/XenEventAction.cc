@@ -37,7 +37,7 @@
 
 #include "G4RunManager.hh"
 #include "G4Event.hh"
-
+#include "G4RadioactiveDecay.hh"
 #include "TFile.h"
 #include "TH1F.h"
 
@@ -55,6 +55,8 @@ G4int XenEventAction::lastCellID=0;
 G4double XenEventAction::lastTrackID=0;
 G4ThreeVector XenEventAction::initialMomentum;
 double XenEventAction::lastZMomentum=0;
+
+std::vector<int> XenEventAction::al28IDs;
 
 XenEventAction* XenEventAction::Instance()
 {
@@ -82,7 +84,7 @@ void XenEventAction::BeginOfEventAction(const G4Event* event)
 
     G4cout << "\n---> This is an event with ID: " << eventNb << G4endl;
 
-
+    al28IDs.clear();
     originX=0;
     originY=0;
     originX=0;
@@ -90,6 +92,16 @@ void XenEventAction::BeginOfEventAction(const G4Event* event)
     accumDelta=0;
     lastCellID=-1;
     lastZMomentum=0;
+
+//    G4RadioactiveDecay *theRadioactiveDecay = new G4RadioactiveDecay();
+//
+//   G4ProcessManager* pmanager =
+//   G4ParticleTable::GetParticleTable()->FindParticle("GenericIon")->GetProcessManager();
+
+//   pmanager ->AddProcess(theRadioactiveDecay);
+//   pmanager ->SetProcessOrdering(theRadioactiveDecay, idxPostStep);
+//   pmanager ->SetProcessOrdering(theRadioactiveDecay, idxAtRest);
+
 
 
 }

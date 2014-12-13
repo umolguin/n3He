@@ -77,10 +77,150 @@ XenSteppingAction::~XenSteppingAction()
 {
 
 }
+bool XenSteppingAction::_isParentAl28(int parentID)
+{
+//	//Printing --
+//	Logger::log("____________Electron with ParentID:");
+//	Logger::log(std::to_string(parentID));
+//	Logger::log("_________________GAMMAsIDs:");
+//	for (auto _i = XenEventAction::gammaIDs.begin (); _i != XenEventAction::gammaIDs.end (); ++_i) {
+//		Logger::log(std::to_string(*_i));
+//	}
+//	///-- Printing
+	bool _isON=false;
+	for (auto _i = XenEventAction::al28IDs.begin (); _i != XenEventAction::al28IDs.end (); ++_i) {
+		if(*_i==parentID){_isON=true;break;}
+	}
+	return _isON;
+}
+void XenSteppingAction::_addAl28TrackID(int id)
+{
+//	//Printing --
+//	Logger::log("____________GAMMA IDs_________________");
+//	for (auto _i = XenEventAction::gammaIDs.begin (); _i != XenEventAction::gammaIDs.end (); ++_i)
+//	{
+//		Logger::log(std::to_string(*_i));
+//	}
+//	///-- Printing
 
+	bool _isON=false;
+	for (auto _i = XenEventAction::al28IDs.begin (); _i != XenEventAction::al28IDs.end (); ++_i) {
+	    if(*_i==id){_isON=true;break;}
+	}
+	if(!_isON){
+		XenEventAction::al28IDs.push_back(id);
+		Logger::log("StepAddAl28TrackID",std::to_string(id));
+	}
+}
+void XenSteppingAction::_printStepSpecs(const G4Step* step)
+{
+	G4int _cellNo = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber();
+	Logger::log("Step","__________________Start STEP_____________________________");
+	std::stringstream sstm;
+	G4Track* track     = step->GetTrack();
+	const G4ParticleDefinition* part = track->GetDefinition();
+	sstm << "[T]Track #"
+	<< track->GetTrackID() << " of " << part->GetParticleName()
+	<< " E(BestUnit)= " << G4BestUnit(track->GetKineticEnergy(),"Energy")
+	<< " produced by Track ID= " << track->GetParentID();
+	Logger::log("Step",sstm.str());sstm.clear();
 
+	// Kinetic energy
+	G4double ken = track->GetKineticEnergy()/MeV;
+
+	// energy deposit
+	G4double edep = step->GetTotalEnergyDeposit();
+	//edep/MeV
+
+	sstm<<"ProcessName: "<<step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName()<<", Delta:"<<step->GetDeltaMomentum()<<", with edep:"<<edep/MeV<<", on cellID:"<<_cellNo<<", ("<<track->GetPosition().x()<<","<<track->GetPosition().y()<<","<<track->GetPosition().z()<<")"<<std::endl;
+	const std::vector<const G4Track*>* secondary = step->GetSecondaryInCurrentStep();
+	size_t nbtrk = (*secondary).size();
+	if (nbtrk) {
+		sstm <<"\n    :----- List of secondaries ----------------" << G4endl;
+		sstm.precision(4);
+		for (size_t lp=0; lp<(*secondary).size(); lp++) {
+		 sstm << "   "
+				<< std::setw(13)
+				<< (*secondary)[lp]->GetDefinition()->GetParticleName()
+				<< ":  energy ="
+				<< std::setw(6)
+				<< G4BestUnit((*secondary)[lp]->GetKineticEnergy(),"Energy")
+				<< "  time ="
+				<< std::setw(6)
+				<< G4BestUnit((*secondary)[lp]->GetGlobalTime(),"Time");
+		 sstm << G4endl;
+
+		}
+
+		sstm << "    :------------------------------------------\n" << G4endl;
+	}
+		 Logger::log("Step",sstm.str());
+
+	////////////////
+}
+void XenSteppingAction::_cleanUserAction(const G4Step* step)
+{
+	/*Load local variables*/
+	G4Track* track     = step->GetTrack();
+	G4int _cellNo = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber();
+	G4double _delta=std::abs((step->GetDeltaEnergy()/MeV));
+	G4double _edep = (step->GetTotalEnergyDeposit())/MeV;
+	G4double _totalEnergy=std::abs((step->GetTotalEnergyDeposit()/MeV));
+	/*End*/
+
+	/*Step 1. Print specs*/
+	_printStepSpecs(step);
+
+	/*Step 2. Check type of particle*///TODO: Should be normalized to Tritons?(i.e. 3m_t=m_p)...
+	if(!track -> GetDefinition()->GetParticleName().compare("Al28")){
+			_addAl28TrackID(track->GetTrackID());
+			//Logger::log("StepAddingName",track -> GetDefinition()->GetParticleName());
+	}
+	if(track -> GetDefinition()==G4Proton::Definition())
+			CellManager::addEnergy(_delta,_cellNo,track->GetVertexMomentumDirection () ,false);
+	if(track -> GetDefinition()==G4Triton::Definition())
+			CellManager::addEnergy(_delta,_cellNo,track->GetVertexMomentumDirection () ,false);
+
+	if(track -> GetDefinition()==G4Electron::Definition())
+			if(_isParentAl28(track->GetParentID()))
+			{
+				Logger::log("Adding Beta");
+				CellManager::addEnergy(_edep,_cellNo,track->GetVertexMomentumDirection () ,true);
+			}
+
+	/*Step3. Draw tracks*/
+	DrawTracks(true, track,fpSteppingManager);
+}
+void XenSteppingAction::_fillHistos(const G4Step* step)
+{
+	if(!step->GetTrack() -> GetDefinition()->GetParticleName().compare("Al28")){
+		//for now I only need to fill H1 Id:5 Beta energies
+		const std::vector<const G4Track*>* secondary = step->GetSecondaryInCurrentStep();
+		size_t nbtrk = (*secondary).size();
+		G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+		analysisManager->FillH1(7,step->GetTrack()->GetKineticEnergy()/MeV);
+		if (nbtrk) {
+			for (size_t lp=0; lp<(*secondary).size(); lp++) {
+				if((*secondary)[lp]->GetDefinition()==G4Electron::Definition())
+				{
+					//child is electron
+					G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+					analysisManager->FillH1(5,((*secondary)[lp]->GetKineticEnergy())/MeV);
+				}
+			}
+		}
+	}
+	if(step->GetTrack()->GetDefinition()==G4Electron::Definition()){
+		G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+		analysisManager->FillH1(6,step->GetTrack()->GetKineticEnergy()/MeV);
+	}
+}
 void XenSteppingAction::UserSteppingAction(const G4Step* step)
 {
+	_fillHistos(step);
+	_cleanUserAction(step);
+	return;
+	//TODO: Clean the code down on.
 	Logger::log("Step","__________________Start STEP_____________________________");
 	std::stringstream sstm;
     G4Track* track     = step->GetTrack();
@@ -115,6 +255,7 @@ void XenSteppingAction::UserSteppingAction(const G4Step* step)
 				<< std::setw(6)
 				<< G4BestUnit((*secondary)[lp]->GetGlobalTime(),"Time");
 		 sstm << G4endl;
+
 		}
 
 		sstm << "    :------------------------------------------\n" << G4endl;
@@ -142,8 +283,14 @@ void XenSteppingAction::UserSteppingAction(const G4Step* step)
     G4int _nIons=0;
 
     G4double momentumDirZ=track->GetMomentumDirection().z();
-
-
+    if(step -> GetTrack() -> GetDefinition() == G4Electron::Definition())
+	{
+		if(_isParentAl28(track->GetParentID()))Logger::log("Stepping","Product of Gamma");
+	}
+    if(step -> GetTrack() -> GetDefinition() == G4Gamma::Definition())
+    {
+    	_addAl28TrackID(track->GetTrackID());
+    }
     if(step -> GetTrack() -> GetDefinition() == G4Neutron::Definition()){
         if(ken==0)//The end of the neutron track
         {
@@ -202,7 +349,7 @@ void XenSteppingAction::UserSteppingAction(const G4Step* step)
                 G4double _totalEnergy=std::abs((step->GetTotalEnergyDeposit()/MeV));
 
                 _nIons=_delta/_weight;
-                G4int _discreet=round(_dist);
+               // G4int _discreet=rounDrawTracks(true, track,fpSteppingManager);d(_dist);
                 XenRunAction::_energy+=_delta;
                 if(XenEventAction::lastCellID!=_copyNo)
                 {
@@ -220,11 +367,11 @@ void XenSteppingAction::UserSteppingAction(const G4Step* step)
                 XenEventAction::lastCellID=_copyNo;
 
 
-                analysisManager->FillH1(1, _discreet,_nIons);
-                G4double _theta=track->GetMomentumDirection().theta();
-                G4cout<<"theta:"<<_theta<<", cos():"<<cos(_theta)<<G4endl;
-                analysisManager->FillH1(2,roundf(cos(_theta)*100)/100);
-                analysisManager->FillH1(3,_theta);
+//                analysisManager->FillH1(1, _discreet,_nIons);
+//                G4double _theta=track->GetMomentumDirection().theta();
+//                G4cout<<"theta:"<<_theta<<", cos():"<<cos(_theta)<<G4endl;
+//                analysisManager->FillH1(2,roundf(cos(_theta)*100)/100);
+//                analysisManager->FillH1(3,_theta);
 
             }
 
@@ -278,21 +425,25 @@ void XenSteppingAction::UserSteppingAction(const G4Step* step)
         }
         else if(step -> GetTrack() -> GetDefinition() == G4Electron::Definition())
 		{
-        	G4double _delta=std::abs((step->GetDeltaEnergy()/MeV));
-        	XenRunAction::_bEnergy+=_delta;
-        	if(XenEventAction::lastCellID!=_copyNo)
-			{
-				G4cout<<"[A]EnergyDep:Beta"<<XenEventAction::accumDelta<<",delta:"<<_delta<<G4endl;
-				//man->FillH2(1, i,j,CellManager::getGFactor(j,i)*10);
-				CellManager::addEnergy(XenEventAction::accumDelta,XenEventAction::lastCellID,track->GetVertexMomentumDirection (),true );
-				XenEventAction::accumDelta=0;
-			}
-			else
-			{
-				G4cout<<"[A]LastCell=copyNO_BETA"<<_copyNo<<G4endl;
-				XenEventAction::accumDelta+=_delta;
+        	if(_isParentAl28(track->GetParentID()))
+        	{
+        		Logger::log("Stepping","Product of Gamma");
+				G4double _delta=std::abs((step->GetDeltaEnergy()/MeV));
+				XenRunAction::_bEnergy+=_delta;
+				if(XenEventAction::lastCellID!=_copyNo)
+				{
+					G4cout<<"[A]EnergyDep:Beta"<<XenEventAction::accumDelta<<",delta:"<<_delta<<G4endl;
+					//man->FillH2(1, i,j,CellManager::getGFactor(j,i)*10);
+					CellManager::addEnergy(XenEventAction::accumDelta,XenEventAction::lastCellID,track->GetVertexMomentumDirection (),true );
+					XenEventAction::accumDelta=0;
+				}
+				else
+				{
+					G4cout<<"[A]LastCell=copyNO_BETA"<<_copyNo<<G4endl;
+					XenEventAction::accumDelta+=_delta;
 
-			}
+				}
+        	}
 			XenEventAction::lastCellID=_copyNo;
         	//std::cout<<"I'm an electron, delta:"<<_delta<<std::endl;
 		}
