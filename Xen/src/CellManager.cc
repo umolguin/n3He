@@ -1,7 +1,7 @@
 #include "CellManager.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4PhysicalConstants.hh"
-
+#include <stdio.h>
 
 G4double CellManager::nFrames=0;
 G4double CellManager::nWires=0;
@@ -30,6 +30,13 @@ G4double CellManager::sumCosBEnergyFrontWindow;
 G4double CellManager::sumBEnergyFrontWindow;
 G4double CellManager::sumCosBEnergyBackWindow;
 G4double CellManager::sumBEnergyBackWindow;
+G4double CellManager::wireLength;
+
+G4double CellManager::GarfieldCellSize;
+G4int CellManager::offsetCellId;
+G4double CellManager::g_transGFactorX;
+G4double CellManager::g_transGFactorY;
+G4double CellManager::g_transGFactorZ;
 
 using namespace std;
 
@@ -119,14 +126,25 @@ void CellManager::init()
     nWires=9;
     spcBtnWires=1.9*cm;
     spcBtnFrms=1.9*cm;
+    wireLength=16*cm;
     spcFrontWin_1stFrm=1.2954*cm;
     spcBckWin_lastFrm=2.1336*cm;
     initX=0;
     initY=0;
     initZ=0;
+    offsetCellId=-10;
+
+    GarfieldCellSize=.1*cm;
 
     //calculate the number of cells, flat representation of the volume
     int nCells=(nWires-1)*nFrames;
+    //calculate Garfield initial vars
+    g_transGFactorX=wireLength/GarfieldCellSize;//=160 when GarfieldCellSize
+    g_transGFactorY=spcBtnWires/GarfieldCellSize;
+    g_transGFactorZ=spcBtnFrms/GarfieldCellSize;
+
+
+
     sumCosEnergy= new G4double[static_cast<int>(nFrames*nWires+3)]; //The array contains nFrames*nWires cells, plus space between
     sumEnergy= new G4double[static_cast<int>(nFrames*nWires+3)];      //front and rear window
 
@@ -218,6 +236,7 @@ void CellManager::addEnergy(G4double energy, G4ThreeVector pos, G4ThreeVector mo
 }
 void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momentum, bool isBeta)
 {
+
 	//TODO: Add a constant declaration file
 	/// IDs
 	const int _frontWindowID=3;
@@ -271,6 +290,7 @@ void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momen
 		}
 		sumCosEnergy[arrayPos]+=cos(_theta)*energy;
 		sumEnergy[arrayPos]+=energy;
+		//CellManager::logEvent(arrayPos,energy);
     }
     else{
     	if(arrayPos==_else)sumNonCellBEnergy=+energy;
@@ -292,10 +312,37 @@ void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momen
 		}
 		sumCosBEnergy[arrayPos]+=cos(_theta)*energy;
 		sumBEnergy[arrayPos]+=energy;
+		//CellManager::logEvent(arrayPos,energy);//TODO:Uncomment for contribution from betas
 		print();
 	}
 
 }
+void CellManager::logEvent(G4double index, G4double energy, G4int &x, G4int &y, G4int &z)
+{
 
+	x=y=z=0;
+	CellManager::g_genIndices(x,y,z,index);
+
+	cout<<"GARFIELD,index:"<<index<<",x:"<<x<<",y:"<<y<<",z:"<<z<<",energy:"<<energy<<endl;
+
+
+}
+void CellManager::g_genIndices(G4int &x, G4int &y, G4int &z, G4double index)
+{
+
+	//lay some vars to translate from physical cells to logical cells for Garfield
+	double nCellsInYZ=(g_transGFactorY*nWires*g_transGFactorZ*nFrames);
+	double nCellsInZ=g_transGFactorZ*nFrames;
+	double Rindex=index+offsetCellId;
+	//calculate
+//	remquo (Rindex,nCellsInYZ,&x);
+//	remquo(Rindex-x*nCellsInYZ,nCellsInZ,&y);
+	div_t divresult;
+	divresult = div ((int)Rindex,(int)nCellsInYZ);
+	x=divresult.quot;
+	divresult=div((int)Rindex-x*nCellsInYZ,(int)nCellsInZ);
+	y=divresult.quot;
+	z=Rindex-x*nCellsInYZ-y*nCellsInZ;
+}
 
 

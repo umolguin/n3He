@@ -80,6 +80,7 @@ class XenSteppingAction : public G4UserSteppingAction
     void _addAl28TrackID(int id);
     bool _isParentAl28(int parentID);
     void _cleanUserAction(const G4Step* step);
+    void _cleanUserActionGarfield(const G4Step* step);
     void _printStepSpecs(const G4Step* step);
     void _fillHistos(const G4Step* step);
 };

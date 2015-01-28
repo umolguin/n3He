@@ -163,6 +163,38 @@ void XenSteppingAction::_cleanUserAction(const G4Step* step)
 	/*Load local variables*/
 	G4Track* track     = step->GetTrack();
 	G4int _cellNo = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber();
+	G4double _edep = (step->GetTotalEnergyDeposit())/MeV;
+	G4double _delta=std::abs((step->GetDeltaEnergy()/MeV));
+	G4double _totalEnergy=std::abs((step->GetTotalEnergyDeposit()/MeV));
+	/*End*/
+
+	/*Step 1. Print specs*/
+	_printStepSpecs(step);
+
+	/*Step 2. Check type of particle*///TODO: Should be normalized to Tritons?(i.e. 3m_t=m_p)...
+	if(track -> GetDefinition()->GetParticleName()=="Al28"){
+			_addAl28TrackID(track->GetTrackID());
+			//Logger::log("StepAddingName",track -> GetDefinition()->GetParticleName());
+	}
+	if(track -> GetDefinition()==G4Proton::Definition())
+			CellManager::addEnergy(_delta,_cellNo,track->GetVertexMomentumDirection () ,false);
+	if(track -> GetDefinition()==G4Triton::Definition())
+			CellManager::addEnergy(_delta,_cellNo,track->GetVertexMomentumDirection () ,false);
+	if(track -> GetDefinition()==G4Electron::Definition())
+			if(_isParentAl28(track->GetParentID())&& track->GetCreatorProcess()->GetProcessName() == "RadioactiveDecay" )
+			{
+				Logger::log("Adding Beta");
+				CellManager::addEnergy(_edep,_cellNo,track->GetVertexMomentumDirection () ,true);
+			}
+
+	/*Step3. Draw tracks*/
+	DrawTracks(true, track,fpSteppingManager);
+}
+void XenSteppingAction::_cleanUserActionGarfield(const G4Step* step)
+{
+	/*Load local variables*/
+	G4Track* track     = step->GetTrack();
+	G4int _cellNo = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber();
 	G4double _delta=std::abs((step->GetDeltaEnergy()/MeV));
 	G4double _edep = (step->GetTotalEnergyDeposit())/MeV;
 	G4double _totalEnergy=std::abs((step->GetTotalEnergyDeposit()/MeV));
@@ -172,28 +204,53 @@ void XenSteppingAction::_cleanUserAction(const G4Step* step)
 	_printStepSpecs(step);
 
 	/*Step 2. Check type of particle*///TODO: Should be normalized to Tritons?(i.e. 3m_t=m_p)...
-	if(!track -> GetDefinition()->GetParticleName().compare("Al28")){
-			_addAl28TrackID(track->GetTrackID());
-			//Logger::log("StepAddingName",track -> GetDefinition()->GetParticleName());
-	}
-	if(track -> GetDefinition()==G4Proton::Definition())
-			CellManager::addEnergy(_delta,_cellNo,track->GetVertexMomentumDirection () ,false);
-	if(track -> GetDefinition()==G4Triton::Definition())
-			CellManager::addEnergy(_delta,_cellNo,track->GetVertexMomentumDirection () ,false);
+//	if(track -> GetDefinition()->GetParticleName()=="Al28"){
+//			//_addAl28TrackID(track->GetTrackID());
+//			//Logger::log("StepAddingName",track -> GetDefinition()->GetParticleName());
+//	}
+	cout<<"-------"<<track -> GetDefinition()->GetParticleName()<<endl;
+	if(track -> GetDefinition()==G4Proton::Definition() && _delta >0)
+	{
+		//CellManager::addEnergy(_delta,_cellNo,track->GetVertexMomentumDirection () ,false);
+		//cout<<"Proton,Cell:"<<_cellNo<<",delta:"<<_delta<<endl;
+		G4int x,y,z;
+		CellManager::logEvent(_cellNo,_delta,x,y,z);
+		G4AnalysisManager* man = G4AnalysisManager::Instance();
+		man->FillNtupleDColumn(1,0, x);
+		man->FillNtupleDColumn(1,1, y);
+		man->FillNtupleDColumn(1,2, z);
+		man->FillNtupleDColumn(1,3, -1);
+		man->FillNtupleDColumn(1,4, _delta);
+		man->AddNtupleRow();
 
-	if(track -> GetDefinition()==G4Electron::Definition())
-			if(_isParentAl28(track->GetParentID()))
-			{
-				Logger::log("Adding Beta");
-				CellManager::addEnergy(_edep,_cellNo,track->GetVertexMomentumDirection () ,true);
-			}
+	}
+	if(track -> GetDefinition()==G4Triton::Definition()&& _delta >0)
+	{
+		//cout<<"Triton,Cell:"<<_cellNo<<",delta:"<<_delta<<endl;
+		//CellManager::addEnergy(_delta,_cellNo,track->GetVertexMomentumDirection () ,false);
+		G4int x,y,z;
+		CellManager::logEvent(_cellNo,_delta,x,y,z);
+		G4AnalysisManager* man = G4AnalysisManager::Instance();
+		man->FillNtupleDColumn(1,0, x);
+		man->FillNtupleDColumn(1,1, y);
+		man->FillNtupleDColumn(1,2, z);
+		man->FillNtupleDColumn(1,3, -1);
+		man->FillNtupleDColumn(1,4, _delta);
+		man->AddNtupleRow();
+	}
+//	if(track -> GetDefinition()==G4Electron::Definition())
+//			if(_isParentAl28(track->GetParentID())&& track->GetCreatorProcess()->GetProcessName() == "RadioactiveDecay" )
+//			{
+//				Logger::log("Adding Beta");
+//				CellManager::addEnergy(_edep,_cellNo,track->GetVertexMomentumDirection () ,true);
+//			}
 
 	/*Step3. Draw tracks*/
-	DrawTracks(true, track,fpSteppingManager);
+	//DrawTracks(true, track,fpSteppingManager);
 }
 void XenSteppingAction::_fillHistos(const G4Step* step)
 {
-	if(!step->GetTrack() -> GetDefinition()->GetParticleName().compare("Al28")){
+	if(step->GetTrack() -> GetDefinition()->GetParticleName()=="Al28"){
 		//for now I only need to fill H1 Id:5 Beta energies
 		const std::vector<const G4Track*>* secondary = step->GetSecondaryInCurrentStep();
 		size_t nbtrk = (*secondary).size();
@@ -218,7 +275,7 @@ void XenSteppingAction::_fillHistos(const G4Step* step)
 void XenSteppingAction::UserSteppingAction(const G4Step* step)
 {
 	_fillHistos(step);
-	_cleanUserAction(step);
+	_cleanUserActionGarfield(step);
 	return;
 	//TODO: Clean the code down on.
 	Logger::log("Step","__________________Start STEP_____________________________");

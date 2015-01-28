@@ -53,19 +53,26 @@ void XenRunAction::BeginOfRunAction(const G4Run* aRun)
     man->OpenFile("Histograms");
     man->SetFirstHistoId(1);
     // Create histogram(s)
-    man->CreateH1("ionDist","Ionization distribution", 18, -.8*cm, 2.8*cm);//TODO: change to the appropriate size
-    man->CreateH1("asym","Asymmetry", 20, -1, 1);
-    man->CreateH1("asymDeg","Asymmetry in rad", 50, 0, 3.14);
-    man->CreateH1("wlDist","Wave Length Distribution", 100, 0, 1);
-    man->CreateH1("beta","Beta Energy", 30, 0, 3);//ID=5,
-    man->CreateH1("allE","All Electrons Energy", 50, 0, 5);
-    man->CreateH1("allG","All Al28 Energy", 70, 0, 7);
+//    man->CreateH1("ionDist","Ionization distribution", 18, -.8*cm, 2.8*cm);//TODO: change to the appropriate size
+//    man->CreateH1("asym","Asymmetry", 20, -1, 1);
+//    man->CreateH1("asymDeg","Asymmetry in rad", 50, 0, 3.14);
+//    man->CreateH1("wlDist","Wave Length Distribution", 100, 0, 1);
+//    man->CreateH1("beta","Beta Energy", 30, 0, 3);//ID=5,
+//    man->CreateH1("allE","All Electrons Energy", 50, 0, 5);
+//    man->CreateH1("allG","All Al28 Energy", 70, 0, 7);
+//
+//
+//    man->CreateH2("GeometricFactor","Geometric Factor",16,0,16,9,0,9);
+//    man->CreateH2("background","Background signal ratio",16,0,16,9,0,9);
 
-
-    man->CreateH2("GeometricFactor","Geometric Factor",16,0,16,9,0,9);
-    man->CreateH2("background","Background signal ratio",16,0,16,9,0,9);
-
-    EnergyManager::printDist();
+    //man->SetFirstNtupleId(1);
+    man->CreateNtuple("Garfield","Energy deposition events");
+    man->CreateNtupleDColumn("x");
+    man->CreateNtupleDColumn("y");
+    man->CreateNtupleDColumn("z");
+    man->CreateNtupleDColumn("timeBin");
+    man->CreateNtupleDColumn("energyDepo");
+    //EnergyManager::printDist();
 
 }
 

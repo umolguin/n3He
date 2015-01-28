@@ -24,6 +24,7 @@ class XenDetectorConstruction : public G4VUserDetectorConstruction
     G4VPhysicalVolume* _GDML();
     G4VPhysicalVolume* _Air();
     G4VPhysicalVolume* _CellsOnly();
+    G4VPhysicalVolume* _CellsOnlyGarfield();
     G4VPhysicalVolume* _CellsOnlyAl();
     G4VPhysicalVolume* _SmallBox();
     G4VPhysicalVolume* _FilledWorld();
