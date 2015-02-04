@@ -78,8 +78,11 @@ class XenSteppingAction : public G4UserSteppingAction
     XenEventAction* fEventAction;
     XenDetectorConstruction* fDetConstruction;
     void _addAl28TrackID(int id);
+    void _addCu64TrackID(int id);
     bool _isParentAl28(int parentID);
+    bool _isParentCu64(int parentID);
     void _cleanUserAction(const G4Step* step);
+    void _cleanUserActionGarfield(const G4Step* step);
     void _printStepSpecs(const G4Step* step);
     void _fillHistos(const G4Step* step);
 };

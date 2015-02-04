@@ -57,6 +57,7 @@ G4ThreeVector XenEventAction::initialMomentum;
 double XenEventAction::lastZMomentum=0;
 
 std::vector<int> XenEventAction::al28IDs;
+std::vector<int> XenEventAction::cu64IDs;
 
 XenEventAction* XenEventAction::Instance()
 {
@@ -85,6 +86,7 @@ void XenEventAction::BeginOfEventAction(const G4Event* event)
     G4cout << "\n---> This is an event with ID: " << eventNb << G4endl;
 
     al28IDs.clear();
+    cu64IDs.clear();
     originX=0;
     originY=0;
     originX=0;

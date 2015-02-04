@@ -1,7 +1,7 @@
 #include "CellManager.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4PhysicalConstants.hh"
-
+#include <stdio.h>
 
 G4double CellManager::nFrames=0;
 G4double CellManager::nWires=0;
@@ -22,14 +22,28 @@ G4double CellManager::sumEnergyFrontWindow;
 G4double CellManager::sumCosEnergyBackWindow;
 G4double CellManager::sumEnergyBackWindow;
 
-G4double* CellManager::sumCosBEnergy;
-G4double* CellManager::sumBEnergy;
-G4double CellManager::sumNonCellBEnergy;
+G4double* CellManager::sumCosBEnergy_al;
+G4double* CellManager::sumBEnergy_al;
+G4double* CellManager::sumCosBEnergy_cu;
+G4double* CellManager::sumBEnergy_cu;
+G4double CellManager::sumNonCellBEnergy_al;
+G4double CellManager::sumNonCellBEnergy_cu;
 
-G4double CellManager::sumCosBEnergyFrontWindow;
-G4double CellManager::sumBEnergyFrontWindow;
-G4double CellManager::sumCosBEnergyBackWindow;
-G4double CellManager::sumBEnergyBackWindow;
+G4double CellManager::sumCosBEnergyFrontWindow_al;
+G4double CellManager::sumBEnergyFrontWindow_al;
+G4double CellManager::sumCosBEnergyBackWindow_al;
+G4double CellManager::sumBEnergyBackWindow_al;
+G4double CellManager::sumCosBEnergyFrontWindow_cu;
+G4double CellManager::sumBEnergyFrontWindow_cu;
+G4double CellManager::sumCosBEnergyBackWindow_cu;
+G4double CellManager::sumBEnergyBackWindow_cu;
+G4double CellManager::wireLength;
+
+G4double CellManager::GarfieldCellSize;
+G4int CellManager::offsetCellId;
+G4double CellManager::g_transGFactorX;
+G4double CellManager::g_transGFactorY;
+G4double CellManager::g_transGFactorZ;
 
 using namespace std;
 
@@ -65,15 +79,16 @@ void CellManager::print()
 
     //START Writing to file
     std::ofstream ofs1 ("dilutionFactor.dat");
-	ofs1 <<sumEnergyFrontWindow<<"	"<<sumBEnergyFrontWindow<<endl;
+	ofs1 <<sumEnergyFrontWindow<<"	"<<sumBEnergyFrontWindow_al<<endl;
 	for(int i=0;i<143;i++)
 	{
 
 			if((i%15)==0)ofs1<<endl;
-			ofs1<<sumEnergy[i]<<"	"<<sumBEnergy[i]<<"	-	";
+			ofs1<<sumEnergy[i]<<"	"<<sumBEnergy_al[i]<<"	-	";
 
 	}
 	ofs1<<endl;
+
 
 	ofs1.close();
 	//END Writing
@@ -91,12 +106,14 @@ G4double CellManager::getGFactor(G4int row, G4int column)//9,16
     return _gFactor;
 }
 
-G4double CellManager::getDFactor(G4int row, G4int column)
+G4double CellManager::getDFactor(G4int row, G4int column,G4String source)
 {
     G4int _index=column*nFrames+row;
     G4double _dFactor;
-    if(sumEnergy[_index]>0)
-        _dFactor=sumBEnergy[_index]/sumEnergy[_index];
+    if(sumEnergy[_index]>0){
+        if(source=="al")_dFactor=sumBEnergy_al[_index]/sumEnergy[_index];
+        if(source=="cu")_dFactor=sumBEnergy_cu[_index]/sumEnergy[_index];
+    }
     else
         _dFactor=0;
     return _dFactor;
@@ -106,10 +123,15 @@ G4double CellManager::getEnergyFromP_T(G4int row, G4int column )
 	G4int _index=row*nFrames+column;
 	return sumEnergy[_index];
 }
-G4double CellManager::getEnergyFromBeta(G4int row, G4int column )
+G4double CellManager::getEnergyFromBeta_al(G4int row, G4int column )
 {
 	G4int _index=row*nFrames+column;
-	return sumBEnergy[_index];
+	return sumBEnergy_al[_index];
+}
+G4double CellManager::getEnergyFromBeta_cu(G4int row, G4int column )
+{
+	G4int _index=row*nFrames+column;
+	return sumBEnergy_cu[_index];
 }
 
 void CellManager::init()
@@ -119,27 +141,44 @@ void CellManager::init()
     nWires=9;
     spcBtnWires=1.9*cm;
     spcBtnFrms=1.9*cm;
+    wireLength=16*cm;
     spcFrontWin_1stFrm=1.2954*cm;
     spcBckWin_lastFrm=2.1336*cm;
     initX=0;
     initY=0;
     initZ=0;
+    offsetCellId=-10;
+
+    GarfieldCellSize=.1*cm;
 
     //calculate the number of cells, flat representation of the volume
     int nCells=(nWires-1)*nFrames;
+    //calculate Garfield initial vars
+    g_transGFactorX=wireLength/GarfieldCellSize;//=160 when GarfieldCellSize
+    g_transGFactorY=spcBtnWires/GarfieldCellSize;
+    g_transGFactorZ=spcBtnFrms/GarfieldCellSize;
+
+
+
     sumCosEnergy= new G4double[static_cast<int>(nFrames*nWires+3)]; //The array contains nFrames*nWires cells, plus space between
     sumEnergy= new G4double[static_cast<int>(nFrames*nWires+3)];      //front and rear window
 
-    sumCosBEnergy= new G4double[static_cast<int>(nFrames*nWires+3)]; //The array contains nFrames*nWires cells, plus space between
-	sumBEnergy= new G4double[static_cast<int>(nFrames*nWires+3)];      //front and rear window
+    sumCosBEnergy_al= new G4double[static_cast<int>(nFrames*nWires+3)]; //The array contains nFrames*nWires cells, plus space between
+	sumBEnergy_al= new G4double[static_cast<int>(nFrames*nWires+3)];      //front and rear window
+
+	sumCosBEnergy_cu= new G4double[static_cast<int>(nFrames*nWires+3)]; //The array contains nFrames*nWires cells, plus space between
+	sumBEnergy_cu= new G4double[static_cast<int>(nFrames*nWires+3)];      //front and rear window
 
     for(int i=0;i<145;i++)
     {
             sumEnergy[i]=0;
             sumCosEnergy[i]=0;
 
-            sumBEnergy[i]=0;
-			sumCosBEnergy[i]=0;
+            sumBEnergy_al[i]=0;
+			sumCosBEnergy_al[i]=0;
+
+			sumBEnergy_cu[i]=0;
+			sumCosBEnergy_cu[i]=0;
     }
 }
 void CellManager::setOrigin(G4double x, G4double y, G4double z)
@@ -216,8 +255,9 @@ void CellManager::addEnergy(G4double energy, G4ThreeVector pos, G4ThreeVector mo
 
 
 }
-void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momentum, bool isBeta)
+void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momentum, bool isBeta, G4String source)
 {
+
 	//TODO: Add a constant declaration file
 	/// IDs
 	const int _frontWindowID=3;
@@ -271,31 +311,82 @@ void CellManager::addEnergy(G4double energy, G4int arrayPos, G4ThreeVector momen
 		}
 		sumCosEnergy[arrayPos]+=cos(_theta)*energy;
 		sumEnergy[arrayPos]+=energy;
+		//CellManager::logEvent(arrayPos,energy);
     }
     else{
-    	if(arrayPos==_else)sumNonCellBEnergy=+energy;
-		if(arrayPos==_frontWindowID)
-		{
-			sumCosBEnergyFrontWindow+=cos(_theta)*energy;
-			sumBEnergyFrontWindow+=energy;
+    	if(source=="al"){
+			if(arrayPos==_else)sumNonCellBEnergy_al=+energy;
+			if(arrayPos==_frontWindowID)
+			{
+				sumCosBEnergyFrontWindow_al+=cos(_theta)*energy;
+				sumBEnergyFrontWindow_al+=energy;
+			}
+			if(arrayPos==_backWindowID)
+			{
+				sumCosBEnergyBackWindow_al+=cos(_theta)*energy;
+				sumBEnergyBackWindow_al+=energy;
+			}
+			arrayPos-=10;
+			if(arrayPos<0)
+			{
+				G4cout<<"[T]Sorry out of cell range"<<G4endl;
+				return;
+			}
+			sumCosBEnergy_al[arrayPos]+=cos(_theta)*energy;
+			sumBEnergy_al[arrayPos]+=energy;
+    	}
+    	if(source=="cu"){
+			if(arrayPos==_else)sumNonCellBEnergy_cu=+energy;
+			if(arrayPos==_frontWindowID)
+			{
+				sumCosBEnergyFrontWindow_cu+=cos(_theta)*energy;
+				sumBEnergyFrontWindow_cu+=energy;
+			}
+			if(arrayPos==_backWindowID)
+			{
+				sumCosBEnergyBackWindow_cu+=cos(_theta)*energy;
+				sumBEnergyBackWindow_cu+=energy;
+			}
+			arrayPos-=10;
+			if(arrayPos<0)
+			{
+				G4cout<<"[T]Sorry out of cell range"<<G4endl;
+				return;
+			}
+			sumCosBEnergy_cu[arrayPos]+=cos(_theta)*energy;
+			sumBEnergy_cu[arrayPos]+=energy;
 		}
-		if(arrayPos==_backWindowID)
-		{
-			sumCosBEnergyBackWindow+=cos(_theta)*energy;
-			sumBEnergyBackWindow+=energy;
-		}
-		arrayPos-=10;
-		if(arrayPos<0)
-		{
-			G4cout<<"[T]Sorry out of cell range"<<G4endl;
-			return;
-		}
-		sumCosBEnergy[arrayPos]+=cos(_theta)*energy;
-		sumBEnergy[arrayPos]+=energy;
+		//CellManager::logEvent(arrayPos,energy);//TODO:Uncomment for contribution from betas
 		print();
 	}
 
 }
+void CellManager::logEvent(G4double index, G4double energy, G4int &x, G4int &y, G4int &z)
+{
 
+	x=y=z=0;
+	CellManager::g_genIndices(x,y,z,index);
+
+	cout<<"GARFIELD,index:"<<index<<",x:"<<x<<",y:"<<y<<",z:"<<z<<",energy:"<<energy<<endl;
+
+
+}
+void CellManager::g_genIndices(G4int &x, G4int &y, G4int &z, G4double index)
+{
+
+	//lay some vars to translate from physical cells to logical cells for Garfield
+	double nCellsInYZ=(g_transGFactorY*nWires*g_transGFactorZ*nFrames);
+	double nCellsInZ=g_transGFactorZ*nFrames;
+	double Rindex=index+offsetCellId;
+	//calculate
+//	remquo (Rindex,nCellsInYZ,&x);
+//	remquo(Rindex-x*nCellsInYZ,nCellsInZ,&y);
+	div_t divresult;
+	divresult = div ((int)Rindex,(int)nCellsInYZ);
+	x=divresult.quot;
+	divresult=div((int)Rindex-x*nCellsInYZ,(int)nCellsInZ);
+	y=divresult.quot;
+	z=Rindex-x*nCellsInYZ-y*nCellsInZ;
+}
 
 

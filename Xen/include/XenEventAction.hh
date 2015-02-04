@@ -26,6 +26,7 @@ class XenEventAction : public G4UserEventAction
   static G4int lastCellID;
   static G4ThreeVector initialMomentum;
   static std::vector<int> al28IDs;
+  static std::vector<int> cu64IDs;
   static G4double lastTrackID;
   static double lastZMomentum;
 
